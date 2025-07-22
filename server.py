@@ -1,10 +1,17 @@
+import asyncio
+import logging
 import os
 import re
 from pathlib import Path
 
 from fastmcp import FastMCP
-from ollama import AsyncClient
+from ollama import AsyncClient, ResponseError
 from typing_extensions import Annotated
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 
 def extract_profiles_from_readme() -> str:
@@ -44,15 +51,106 @@ ollama_client = AsyncClient()
 model = os.getenv("MCP_CAFE_MODEL", "gemma3")
 
 
+async def ensure_model_available(model_name: str) -> bool:
+    """
+    Check if model is available locally, and pull it if not.
+    Returns True if model is available, False if failed to pull.
+    """
+    try:
+        # List available models
+        models_response = await ollama_client.list()
+        available_models = []
+
+        # Handle the Ollama response which contains a list of model objects
+        if hasattr(models_response, "models"):
+            # Response has models attribute
+            for model_obj in models_response.models:
+                if hasattr(model_obj, "model"):
+                    available_models.append(model_obj.model)
+                elif hasattr(model_obj, "name"):
+                    available_models.append(model_obj.name)
+        elif isinstance(models_response, dict) and "models" in models_response:
+            # Response is a dictionary with models key
+            for model_info in models_response["models"]:
+                if isinstance(model_info, dict):
+                    name = model_info.get("name") or model_info.get("model")
+                    if name:
+                        available_models.append(name)
+        else:
+            logging.warning(f"Unexpected models response format: {models_response}")
+
+        logging.info(f"Available models: {available_models}")
+
+        # Check if exact model name exists or if model name matches any available model
+        model_available = any(
+            model_name == available_model
+            or model_name in available_model
+            or available_model.startswith(model_name + ":")
+            for available_model in available_models
+        )
+
+        if model_available:
+            logging.info(f"Model '{model_name}' is already available locally")
+            return True
+
+        # Model not found, try to pull it
+        logging.info(f"Model '{model_name}' not found locally. Attempting to pull...")
+
+        try:
+            # Pull model with progress tracking
+            pull_response = await ollama_client.pull(model_name, stream=True)
+            async for chunk in pull_response:
+                status = chunk.get("status", "")
+                if "downloading" in status.lower():
+                    logging.info(f"Downloading {model_name}: {status}")
+                elif "pulling" in status.lower():
+                    logging.info(f"Pulling {model_name}: {status}")
+                elif status:
+                    logging.info(f"Model {model_name}: {status}")
+
+            logging.info(f"Successfully pulled model '{model_name}'")
+            return True
+
+        except ResponseError as e:
+            if e.status_code == 404:
+                logging.error(f"Model '{model_name}' not found in Ollama registry")
+            else:
+                logging.error(f"Error pulling model '{model_name}': {e.error}")
+            return False
+        except Exception as e:
+            logging.error(f"Unexpected error pulling model '{model_name}': {str(e)}")
+            return False
+
+    except Exception as e:
+        logging.error(f"Error checking model availability: {str(e)}")
+        return False
+
+
 async def call_ollama(system: str, question: str) -> str:
-    response = await ollama_client.chat(
-        model=model,
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": question},
-        ],
-    )
-    return response["message"]["content"]
+    """Call Ollama with automatic model availability checking."""
+    # Ensure model is available before making the call
+    if not await ensure_model_available(model):
+        error_msg = f"Model '{model}' is not available and could not be pulled. Please check your Ollama installation and model name."
+        logging.error(error_msg)
+        return error_msg
+
+    try:
+        response = await ollama_client.chat(
+            model=model,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": question},
+            ],
+        )
+        return response["message"]["content"]
+    except ResponseError as e:
+        error_msg = f"Error calling model '{model}': {e.error}"
+        logging.error(error_msg)
+        return error_msg
+    except Exception as e:
+        error_msg = f"Unexpected error calling model '{model}': {str(e)}"
+        logging.error(error_msg)
+        return error_msg
 
 
 @mcp.tool(
@@ -110,5 +208,21 @@ Your answer must be written from the perspective of the user, as if they were ta
     )
 
 
+async def initialize_server():
+    """Initialize the server and ensure the default model is available."""
+    logging.info(f"Initializing MCP Café server with model: {model}")
+
+    # Check and ensure model is available at startup
+    model_ready = await ensure_model_available(model)
+    if model_ready:
+        logging.info("Server initialization complete - ready to serve!")
+    else:
+        logging.warning("Server starting but default model may not be available")
+
+
 if __name__ == "__main__":
+    # Run initialization
+    asyncio.run(initialize_server())
+
+    # Start the MCP server
     mcp.run()

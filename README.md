@@ -1,6 +1,12 @@
 # MCP Café
 
-Sometimes, when one is stuck on an engineering problem, it helps to take a coffee break and talk to friends and co-workers about it. This is what MCP Café is all about.
+Sometimes, when one is stuck on an engin## Models
+
+MCP Café is designed to be generic, and can work with any Chat LLM. It can work with ChatGPT, Claude, Gemini, Mistral, Gwen, and many others. However, currently only [Ollama](https://ollama.com/) is supported out of the box.
+
+The default model is `gemma3`, but you can change it to any model you want by setting the `MCP_CAFE_MODEL` environment variable.
+
+**Automatic Model Management**: The server automatically checks if the specified model is available locally when starting up or when making requests. If the model is not found, it will attempt to pull it from the Ollama registry automatically, with progress logging to keep you informed of the download status.g problem, it helps to take a coffee break and talk to friends and co-workers about it. This is what MCP Café is all about.
 
 MCP Café is an [MCP](https://en.wikipedia.org/wiki/Model_Context_Protocol) server that simulates technical discussions. Different agents can be configured to simulate different personalities and profile.
 
