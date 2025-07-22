@@ -2,7 +2,7 @@
 
 Sometimes, when one is stuck on an engineering problem, it helps to take a coffee break and talk to friends and co-workers about it. This is what MCP Café is all about.
 
-MCP Café is an [MCP](https://en.wikipedia.org/wiki/Model_Context_Protocol) server that simulates technical discussions. Different agents can be configured to simulate different personalities and profile.
+MCP Café is an [MCP](https://en.wikipedia.org/wiki/Model_Context_Protocol) server that simulates technical discussions. Different agents can be configured to simulate different personalities and profiles.
 
 ## Profiles
 
@@ -24,6 +24,14 @@ MCP Café is an [MCP](https://en.wikipedia.org/wiki/Model_Context_Protocol) serv
 <!-- profiles end -->
 
 You are free to create other profiles that match more closely your needs.
+
+## Available Tools
+
+| Tool | Description |
+|------|-------------|
+| `have_a_coffee` | Have a coffee at the office to relax and think about the problem. Simulates conversations with various office profiles. |
+| `go_for_a_walk` | Go for a walk to clear your mind. Provides internal reflection and introspection to help think through problems. |
+| `take_a_shower` | Take a shower to refresh your mind and be in the best bug-fixing environment. Similar to walking but focused on finding solutions. |
 
 ## Installation
 
