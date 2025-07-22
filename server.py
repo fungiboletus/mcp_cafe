@@ -47,7 +47,9 @@ mcp = FastMCP(
     version="0.1.0",
 )
 
-ollama_client = AsyncClient()
+ollama_client = AsyncClient(
+    host=os.getenv("MCP_CAFE_OLLAMA_ENDPOINT", "http://localhost:11434")
+)
 model = os.getenv("MCP_CAFE_MODEL", "gemma3")
 
 
@@ -94,20 +96,11 @@ async def ensure_model_available(model_name: str) -> bool:
             return True
 
         # Model not found, try to pull it
-        logging.info(f"Model '{model_name}' not found locally. Attempting to pull...")
+        logging.info(f"Model '{model_name}' not found locally. Pulling model...")
 
         try:
-            # Pull model with progress tracking
-            pull_response = await ollama_client.pull(model_name, stream=True)
-            async for chunk in pull_response:
-                status = chunk.get("status", "")
-                if "downloading" in status.lower():
-                    logging.info(f"Downloading {model_name}: {status}")
-                elif "pulling" in status.lower():
-                    logging.info(f"Pulling {model_name}: {status}")
-                elif status:
-                    logging.info(f"Model {model_name}: {status}")
-
+            # Simple pull without streaming
+            await ollama_client.pull(model_name)
             logging.info(f"Successfully pulled model '{model_name}'")
             return True
 
@@ -210,7 +203,9 @@ Your answer must be written from the perspective of the user, as if they were ta
 
 async def initialize_server():
     """Initialize the server and ensure the default model is available."""
+    ollama_endpoint = os.getenv("MCP_CAFE_OLLAMA_ENDPOINT", "http://localhost:11434")
     logging.info(f"Initializing MCP Café server with model: {model}")
+    logging.info(f"Using Ollama endpoint: {ollama_endpoint}")
 
     # Check and ensure model is available at startup
     model_ready = await ensure_model_available(model)

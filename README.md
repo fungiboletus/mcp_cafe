@@ -62,6 +62,8 @@ MCP Café is designed to be generic, and can be used with any Chat LLM. It can w
 
 The default model is `gemma3`, but you can change it to any model you want by setting the `MCP_CAFE_MODEL` environment variable.
 
+You can configure the Ollama endpoint by setting the `MCP_CAFE_OLLAMA_ENDPOINT` environment variable. The default is `http://localhost:11434`.
+
 ## Licence
 
 Café is licensed under the [WTFPL](https://www.wtfpl.net/) licence.
