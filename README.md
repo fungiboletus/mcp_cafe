@@ -58,13 +58,36 @@ You are free to create other profiles that match more closely your needs.
    ./start.sh
    ```
 
-## Models
+## Usage example in `mcp.json`
+
+```json5
+{
+   "servers": {
+      // ...
+      "mcp-cafe": {
+         "type": "stdio",
+         "command": "/absolute-path-to-mcp-cafe/start.sh",
+         "args": [],
+         "env": {
+            "MCP_CAFE_OLLAMA_ENDPOINT": "http://localhost:11434",
+            "MCP_CAFE_MODEL": "gemma3",
+            // "MCP_CAFE_OLLAMA_TOKEN": "token-if-needed"
+         }
+      },
+      // ...
+   },
+}
+```
+
+## Configuration
 
 MCP Café is designed to be generic, and can work with any Chat LLM. It can work with ChatGPT, Claude, Gemini, Mistral, Gwen, and many others. However, currently only [Ollama](https://ollama.com/) is supported out of the box.
 
 The default model is `gemma3`, but you can change it to any model you want by setting the `MCP_CAFE_MODEL` environment variable.
 
 You can configure the Ollama endpoint by setting the `MCP_CAFE_OLLAMA_ENDPOINT` environment variable. The default is `http://localhost:11434`.
+
+Moreover, if your Ollama server requires an API token, you can set the `MCP_CAFE_OLLAMA_TOKEN` environment variable. It will be then used for bearer token authentication.
 
 ## Licence
 
