@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import os
-import re
 from pathlib import Path
 
 from fastmcp import FastMCP
@@ -47,10 +46,19 @@ mcp = FastMCP(
     version="0.1.0",
 )
 
-ollama_client = AsyncClient(
-    host=os.getenv("MCP_CAFE_OLLAMA_ENDPOINT", "http://localhost:11434")
-)
+# Ollama configuration
+ollama_host = os.getenv("MCP_CAFE_OLLAMA_ENDPOINT", "http://localhost:11434")
+ollama_token = os.getenv("MCP_CAFE_OLLAMA_TOKEN")
 model = os.getenv("MCP_CAFE_MODEL", "gemma3")
+
+# Build client with optional bearer token authentication
+if ollama_token:
+    ollama_client = AsyncClient(
+        host=ollama_host,
+        headers={"Authorization": f"Bearer {ollama_token}"},
+    )
+else:
+    ollama_client = AsyncClient(host=ollama_host)
 
 
 async def ensure_model_available(model_name: str) -> bool:
@@ -203,9 +211,10 @@ Your answer must be written from the perspective of the user, as if they were ta
 
 async def initialize_server():
     """Initialize the server and ensure the default model is available."""
-    ollama_endpoint = os.getenv("MCP_CAFE_OLLAMA_ENDPOINT", "http://localhost:11434")
     logging.info(f"Initializing MCP Café server with model: {model}")
-    logging.info(f"Using Ollama endpoint: {ollama_endpoint}")
+    logging.info(f"Using Ollama endpoint: {ollama_host}")
+    if ollama_token:
+        logging.info("Bearer token authentication enabled")
 
     # Check and ensure model is available at startup
     model_ready = await ensure_model_available(model)
