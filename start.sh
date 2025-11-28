@@ -5,7 +5,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Change to the script directory
 cd "$SCRIPT_DIR"
-echo "Working directory: $PWD"
 
 # Check if virtual environment exists
 if [ ! -d ".venv" ]; then
