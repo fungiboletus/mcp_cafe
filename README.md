@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/fungiboletus-mcp-cafe-badge.png)](https://mseep.ai/app/fungiboletus-mcp-cafe)
+
 # MCP Café
 
 Sometimes, when one is stuck on an engineering problem, it helps to take a coffee break and talk to friends and co-workers about it. This is what MCP Café is all about.
